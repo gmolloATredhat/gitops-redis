@@ -66,21 +66,15 @@ This will:
 ```bash
 oc login <your-cluster> --username <your-user> --password <your-password>
 ```
-> Installing Operators requires elevated privileges.
->By default, this means using a user with cluster-admin role.
->
->It is possible to allow non-admin users to install Operators by configuring
->OperatorGroups and service accounts with appropriate RBAC, but this must be
->set up in advance by a cluster administrator.
+> Installing Operators requires elevated privileges: ensure you are a user of the cluster-admins group. It is possible to allow non-admin users to install Operators by configuring OperatorGroups and service accounts with appropriate RBAC, but this must be set up in advance by a cluster administrator.
 
-## 3. Deploy via Argo CD (GUI)
+## 3. Deploy via OpenShift GitOps (Argo CD GUI)
+You have installed the Red Hat OpenShift GitOps Operator in your cluster.
+In the Administrator perspective of the OpenShift web console, navigate to Operators
+Installed Operators to verify that the Red Hat OpenShift GitOps Operator is installed.
 
-Go to:
+Navigate to the red hat applications menu icon <img width="32" height="32" alt="image" src="https://github.com/user-attachments/assets/a593dd13-d428-4e22-93ce-467168b5c7b9" /> > OpenShift GitOps > Cluster Argo CD. The login page of the Argo CD UI is displayed in a new window. 
 
-OpenShift Console
-→ Installed Operators
-→ OpenShift GitOps
-→ Argo CD
 
 Click **Create Application**
 
