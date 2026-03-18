@@ -1,0 +1,8 @@
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: redis-operator-group
+  namespace: gianfranco
+spec:
+  targetNamespaces:
+    - gianfranco

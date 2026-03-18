@@ -1,0 +1,8 @@
+apiVersion: redis.redis.opstreelabs.in/v1beta1
+kind: RedisCluster
+metadata:
+  name: example-redis
+  namespace: gianfranco
+spec:
+  size: 3
+  image: redis:6.2
