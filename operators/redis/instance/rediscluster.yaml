@@ -3,6 +3,9 @@ kind: RedisCluster
 metadata:
   name: example-redis
   namespace: gianfranco
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+    argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 spec:
   size: 3
   image: redis:6.2
