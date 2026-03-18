@@ -6,7 +6,7 @@ metadata:
 spec:
   project: operators
   source:
-    repoURL: https://github.com/<your-org>/gitops-redis.git
+    repoURL: https://github.com/gmolloATredhat/gitops-redis.git
     targetRevision: main
     path: operators
   destination:
