@@ -1,36 +1,50 @@
-# GitOps Repository — Redis Operator Example
+# Redis Operator GitOps Deployment (OpenShift)
 
-This repository demonstrates a **GitOps-based deployment** of the
-**Redis Operator (Opstree Solutions v0.15.1)** on OpenShift using
-OpenShift GitOps (Argo CD).
+This repository provides a **ready-to-use GitOps setup** to deploy the
+**Redis Operator (Opstree Solutions v0.15.1)** on OpenShift using OpenShift GitOps.
 
-**Namespace used:** `gianfranco`
+# Usage Options
 
----
+> No local setup required: this repository can be used directly from Argo CD.
 
-# Overview
+### Option 1 — Direct GitOps Deployment (Recommended)
 
-This repo provides:
+Simply use this repository in OpenShift GitOps by providing:
 
-* Full GitOps structure (multi-operator ready)
-* Multi-environment support (dev / stage / prod)
-* Example RedisCluster Custom Resource
-* Automated setup via bash script
+* Repository URL
 
----
+  ```
+  https://github.com/gmolloATredhat/gitops-redis.git
+  ```
+* Branch: `main`
+* Path: `operators` (or `envs/dev/operators/redis`)
 
-# Prerequisites
+No cloning or local setup is required.
 
-* OpenShift 4.x cluster (ROSA or OCP)
-* OpenShift GitOps installed
-* GitHub account + Personal Access Token (PAT)
-* Git installed locally
 
----
+### Option 2 — Fork for Customization
 
-# Quick Setup
+If you want to safely customize the configuration:
 
-## 1. Run the setup script
+1. Click **Fork** on GitHub
+2. Use your forked repository in Argo CD
+
+
+### Option 3 — Clone Locally
+
+If you prefer working locally:
+
+```bash
+git clone https://github.com/gmolloATredhat/gitops-redis.git
+cd gitops-redis
+```
+
+
+### Option 4 — Recreate the Repository from Scratch
+
+If you want to create a new repository with the same structure:
+
+Use the provided setup script:
 
 ```bash
 chmod +x setup-gitops-redis.sh
@@ -39,18 +53,98 @@ chmod +x setup-gitops-redis.sh
 
 This will:
 
-* Create directory structure
-* Generate all YAML files
-* Initialize Git repository
+* Generate the full directory structure
+* Create all base YAML files
+* Initialize a Git repository
 
 ---
 
-# Repository Structure
+# Quick Start
+
+## 2. Connect to your OpenShift cluster
+
+```bash
+oc login <your-cluster> --username <your-user> --password <your-password>
+```
+> Installing Operators requires elevated privileges.
+>By default, this means using a user with cluster-admin role.
+>
+>It is possible to allow non-admin users to install Operators by configuring
+>OperatorGroups and service accounts with appropriate RBAC, but this must be
+>set up in advance by a cluster administrator.
+
+## 3. Deploy via Argo CD (GUI)
+
+Go to:
+
+OpenShift Console
+→ Installed Operators
+→ OpenShift GitOps
+→ Argo CD
+
+Click **Create Application**
+
+## 4. Fill the Application form
+
+### General
+
+* Name: `redis-app`
+* Project: `default` (or `operators`)
+
+### Source
+
+* Repository URL:
+
+  ```
+  https://github.com/gmolloATredhat/gitops-redis.git
+  ```
+* Revision: `main`
+* Path:
+
+  ```
+  operators
+  ```
+
+For environment-specific deployment:
+
+```
+envs/dev/operators/redis
+```
+
+### Destination
+
+* Cluster: `https://kubernetes.default.svc`
+* Namespace: `openshift-gitops`
+
+
+### Sync Policy
+
+* Automatic (recommended)
+
+
+## 5. Click Create
+
+Argo CD will automatically:
+
+1. Create namespace `gianfranco`
+2. Install Redis Operator via OLM
+3. Deploy a RedisCluster instance
+
+
+# Verify Deployment
+
+```bash
+oc get pods -n gianfranco
+oc get csv -n gianfranco
+oc get redisclusters -n gianfranco
+```
+
+---
+
+# Repo Structure
 
 ```
 gitops-repo/
-├── bootstrap/
-│   └── root-app.yaml
 ├── operators/
 │   └── redis/
 │       ├── namespace.yaml
@@ -62,188 +156,83 @@ gitops-repo/
 │   ├── dev/
 │   ├── stage/
 │   └── prod/
-└── projects/
 ```
 
 ---
 
-#  GitHub Authentication (PAT)
+# Customization
+You might want to change a few details, here is an example of what can be done.
 
-## First push requires authentication
+### Change namespace
 
-```bash
-git remote add origin https://github.com/<your-org>/gitops-redis.git
-git branch -M main
-git push -u origin main
+Edit:
+
+```
+operators/redis/namespace.yaml
 ```
 
-When prompted:
+### Change Redis configuration
 
-* Username → your GitHub username
-* Password → your **Personal Access Token (PAT)**
+Edit:
 
----
-
-## Save credentials (Mac)
-
-```bash
-git config --global credential.helper osxkeychain
+```
+operators/redis/instance/rediscluster.yaml
 ```
 
----
-
-#  Operator Configuration
-
-### Namespace
+Example:
 
 ```yaml
-name: gianfranco
+spec:
+  size: 5
+  image: redis:7
 ```
-
-### Operator
-
-* Name: `redis-operator`
-* Source: `community-operators`
-* Channel: `stable`
 
 ---
 
-#  Multi-Environment Setup
+# Environment-specific configuration
 
 Each environment can override:
 
 * InstallPlanApproval
-* Resource limits
 * Scaling
-* External integrations
+* Resources
 
 Example:
 
 ```
-envs/dev/operators/redis/subscription.yaml
 envs/prod/operators/redis/subscription.yaml
 ```
 
 ---
 
-#  GitOps Deployment (Argo CD)
+### Multi-Environment Usage
 
-## Step 1 — Create Project
-
-* Name: `operators`
-* Namespace: `openshift-gitops`
-
----
-
-## Step 2 — Create Application
-
-* Name: `root-app`
-* Repo: this repository
-* Path: `operators`
-* Sync Policy: Automated
+| Environment | Path                         |
+| ----------- | ---------------------------- |
+| Dev         | `envs/dev/operators/redis`   |
+| Stage       | `envs/stage/operators/redis` |
+| Prod        | `envs/prod/operators/redis`  |
 
 ---
 
-## Step 3 — Sync
+# Notes
 
-Argo CD will:
-
-1. Create Namespace
-2. Create OperatorGroup
-3. Create Subscription
-4. OLM installs Redis Operator
-5. Apply RedisCluster CR
+* Default namespace: `gianfranco`
+* Operator source: `community-operators`
+* No secrets are included in this repo
+* Production should use **manual approval**
 
 ---
 
-#  Verification
+# Best Practices
 
-```bash
-oc get csv -n gianfranco
-oc get pods -n gianfranco
-```
-
----
-
-#  Architecture Flow
-
-```
-Git Repo
-   ↓
-Argo CD
-   ↓
-Operator Lifecycle Manager (OLM)
-   ↓
-Redis Operator
-   ↓
-RedisCluster
-```
-
----
-
-#  Setup Script
-
-Below is the script used to bootstrap the repo:
-
-```bash
-#!/bin/bash
-set -e
-
-REPO_NAME="gitops-redis"
-NAMESPACE="gianfranco"
-
-mkdir -p $REPO_NAME/bootstrap
-mkdir -p $REPO_NAME/operators/redis/instance
-mkdir -p $REPO_NAME/envs/dev/operators/redis
-mkdir -p $REPO_NAME/envs/stage/operators/redis
-mkdir -p $REPO_NAME/envs/prod/operators/redis
-mkdir -p $REPO_NAME/projects
-
-cd $REPO_NAME
-
-cat > operators/redis/namespace.yaml <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: $NAMESPACE
-EOF
-
-cat > operators/redis/operatorgroup.yaml <<EOF
-apiVersion: operators.coreos.com/v1
-kind: OperatorGroup
-metadata:
-  name: redis-operator-group
-  namespace: $NAMESPACE
-spec:
-  targetNamespaces:
-    - $NAMESPACE
-EOF
-
-cat > operators/redis/subscription.yaml <<EOF
-apiVersion: operators.coreos.com/v1alpha1
-kind: Subscription
-metadata:
-  name: redis-operator
-  namespace: $NAMESPACE
-spec:
-  channel: stable
-  name: redis-operator
-  source: community-operators
-  sourceNamespace: openshift-marketplace
-  installPlanApproval: Automatic
-EOF
-
-git init
-git add .
-git commit -m "Initial GitOps setup"
-```
-
----
-
-#  Best Practices
-
-* Use separate namespaces per operator
+* Use environment overlays (`envs/`)
+* Separate namespaces per environment
 * Use Manual approval in production
-* Do not store secrets in Git
-* Use App-of-Apps pattern
-* Monitor CSV and InstallPlans
+* Monitor CSV status for operator health
+
+---
+
+# Summary
+
+* Clone repo -> Create Argo CD Application -> Sync -> Redis running 🚀
